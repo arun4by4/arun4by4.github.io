@@ -17,6 +17,9 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="assets/css/style.css" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -179,6 +182,10 @@
         <span class="section__label fade-in">Technical Expertise</span>
         <h2 class="section__title fade-in fade-in-delay-1" id="skills-heading">Skills &amp; Technologies</h2>
         <div class="divider fade-in fade-in-delay-2"></div>
+
+        <div class="chart-card fade-in fade-in-delay-2">
+          <canvas id="tech-radar" role="img" aria-label="Radar chart showing tech stack diversity across 5 categories"></canvas>
+        </div>
 
         <div class="skills__grid">
 
@@ -416,6 +423,7 @@
         html.setAttribute('data-theme', theme);
         btn.innerHTML = theme === 'dark' ? SUN_SVG : MOON_SVG;
         btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        if (typeof buildChart === 'function') { buildChart(); }
       }
 
       // Restore saved preference, default to dark
@@ -496,6 +504,82 @@
           closeMenu();
         }
       });
+    }());
+
+    /* ----------------------------------------------------------
+       Tech-stack radar chart (Chart.js)
+    ---------------------------------------------------------- */
+    (function () {
+      var chartInstance = null;
+
+      function getChartColors() {
+        var isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        return {
+          accent:  isDark ? '#64ffda' : '#0d7a65',
+          fill:    isDark ? 'rgba(100, 255, 218, 0.15)' : 'rgba(13, 122, 101, 0.12)',
+          grid:    isDark ? 'rgba(100, 255, 218, 0.15)' : 'rgba(0, 0, 0, 0.10)',
+          label:   isDark ? '#a8b2d8' : '#4a5568',
+        };
+      }
+
+      window.buildChart = function () {
+        var canvas = document.getElementById('tech-radar');
+        if (!canvas || typeof Chart === 'undefined') { return; }
+
+        var c = getChartColors();
+
+        var cfg = {
+          type: 'radar',
+          data: {
+            labels: [
+              ['Languages &', 'Frameworks'],
+              ['Cloud &', 'DevOps'],
+              'Databases',
+              ['Tools &', 'IDEs'],
+              ['App Servers', '& OS']
+            ],
+            datasets: [{
+              data: [15, 10, 5, 11, 6],
+              fill: true,
+              backgroundColor: c.fill,
+              borderColor: c.accent,
+              pointBackgroundColor: c.accent,
+              pointBorderColor: c.accent,
+              borderWidth: 2,
+              pointRadius: 4,
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              r: {
+                min: 0,
+                max: 16,
+                ticks: {
+                  stepSize: 4,
+                  color: c.label,
+                  backdropColor: 'transparent',
+                  font: { size: 10 },
+                },
+                grid:        { color: c.grid },
+                angleLines:  { color: c.grid },
+                pointLabels: { color: c.label, font: { size: 12, weight: '600' } },
+              }
+            }
+          }
+        };
+
+        if (chartInstance) { chartInstance.destroy(); }
+        chartInstance = new Chart(canvas, cfg);
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', window.buildChart);
+      } else {
+        window.buildChart();
+      }
     }());
 
     /* ----------------------------------------------------------
